@@ -1,0 +1,221 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { supabase } from '../lib/supabaseClient';
+import CardCategories from '../components/CardCategories.astro';
+import CardProducts from '../components/CardProducts.astro';
+import Carousel from '../components/Carousel.astro';
+
+const {data:categories, error: errorCategories} = await supabase
+  .from('categories')
+  .select('*')
+  .is('parent_id',null);
+          
+
+if (errorCategories){
+  console.error('Error fetching categories:', errorCategories);
+}
+
+// productos destacados
+const {data: products, error: errorProducts} = await supabase
+  .rpc('get_random_products', {limit_count: 12});
+
+if (errorProducts){
+  console.error('Error fetching products:', errorProducts);
+}
+
+// subcategorias
+const {data: subcategories , error:errorSubcategories} =  await supabase 
+  .from ( 'categories' )
+  .select('*')
+  .not('parent_id','is',null);
+
+if (errorSubcategories){
+  console.error('Error fetching subcategories:', errorSubcategories);
+}
+
+---
+<Layout>
+  <!-- Banner -->
+  <section class="banner">
+    <div class="banner-filter">
+      <h1>HYPERSHOP</h1>
+      <h2 class="font-bold italic">Refacciones que marcan la diferencia.</h2>
+      <div class="banner-buttons">
+        <button class="button-product" onclick="window.location.href='/product'">Productos</button>
+        <button class="button-nosotros" onclick="window.location.href='/aboutUs'">Nosotros</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Carrucel publicidad -->
+  <div class="promo-carousel-wrapper">
+    <button class="promo-carousel-button" onclick="prevPromoSlide()">‹</button>
+    <div class="promo-carousel-container">
+      <div class="promo-carousel-images" id="promoCarouselImages">
+        <!-- Duplicamos la última imagen al principio -->
+        <img src="/assets/banner4.jpg" alt="Publicidad 4" class="clone" />
+        <img src="/assets/banner1.jpg" alt="Publicidad 1" />
+        <img src="/assets/banner2.jpg" alt="Publicidad 2" />
+        <img src="/assets/banner3.jpg" alt="Publicidad 3" />
+        <img src="/assets/banner4.jpg" alt="Publicidad 4" />
+        <!-- Duplicamos la primera imagen al final -->
+        <img src="/assets/banner1.jpg" alt="Publicidad 1" class="clone" />
+      </div>
+    </div>
+    <button class="promo-carousel-button" onclick="nextPromoSlide()">›</button>
+  </div>
+
+  <!-- Carrucel categories -->
+  <Carousel title="Categorías">
+    { categories?.map(category => (
+      <CardCategories
+        name={category.name}
+        img={category.image_url}
+      />
+    ))}
+  </Carousel>
+
+  <!-- Carrucel productos -->
+  <Carousel title="Destacados">
+    { products?.map( product => (
+      <CardProducts 
+       product = { product }
+      />
+    ))}
+  </Carousel>
+
+  <!-- carruceles -->
+
+  <!-- {subcategories?.map(subcategory => {
+    const productSubcategory = allProducts?.filter(product => product.category_id === subcategory.category_id);
+
+    return(
+      <Carousel title={subcategory.name}>
+        { productSubcategory?.map(product => (
+          <CardProducts
+          product = { product }
+          />
+        ))}
+      </Carousel>
+    )
+  })} -->
+
+</Layout>
+
+<style>
+  /*banner*/
+  .banner {
+    height: 60vh;
+    width: 100%;
+    background-image: url(../assets/homepage/banner.jpg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+  }
+
+  .banner-filter {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    color: white;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.2),
+      rgba(0, 0, 0, 0.9),
+      rgba(0, 0, 0, 0.2)
+    );
+  }
+
+  .banner-filter h1 {
+    font-size: 3rem;
+    font-family: "Emblema One", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  .banner-filter h2 {
+    font-size: 1.5rem;
+    color: var(main-accent);
+  }
+
+  .banner-buttons button {
+    border: none;
+    width: 150px;
+    height: 40px;
+    border-radius: 5px;
+    margin: 0 10px;
+    cursor: pointer;
+  }
+
+  /* style del carrusel de publicidad */
+  .promo-carousel-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin: 3rem auto;
+    width: 100%;
+    
+  }
+
+  .promo-carousel-button {
+    background-color: var(--main-accent);
+    opacity: 0.5;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 8px;
+    z-index: 1;
+  }
+
+  .promo-carousel-button:hover{
+    opacity: 1;
+  }
+
+  .promo-carousel-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    height: 600px;
+    width: 90%;
+    border-radius: 10px;
+  }
+
+  .promo-carousel-images {
+    display: flex;
+    height: 100%;
+    transition: transform 0.5s ease-in-out;
+  }
+
+  .promo-carousel-images img {
+    min-width: 100%;
+    height: 100%;
+    object-fit: fill;
+    object-position: center;
+    border-radius: 10px;
+  }
+
+  .button-product {
+    color: white;
+    background-color: var(--main-accent);
+  }
+
+  .button-product:hover {
+    opacity: 0.9;
+  }
+
+  .button-nosotros {
+    color: black;
+    background-color: #ffffff;
+  }
+
+</style>
+
+<script src="/js/carouselMarketing.js" defer></script>

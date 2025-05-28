@@ -1,0 +1,405 @@
+---
+import { supabase } from "../lib/supabaseClient.js";
+
+const { data: categories, error: errorCategories } = await supabase
+  .from("categories")
+  .select("*");
+
+if (errorCategories) {
+  console.error("Error fetching categories:", errorCategories);
+}
+
+const mainCategories = categories?.filter(
+  (category) => category.parent_id === null
+);
+---
+
+<header>
+  <div class="header-left">
+    <button id="btn-menu">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        width="24"
+        height="24"
+        stroke-width="2"
+      >
+        <path d="M4 6l16 0"></path>
+        <path d="M4 12l16 0"></path>
+        <path d="M4 18l16 0"></path>
+      </svg>
+    </button>
+
+    <img src="/logo_no_bg.png" alt="logo" id="logo" />
+  </div>
+
+<div class="header-center">
+    <div class="hc-input-wrapper">
+      <div class="hc-input">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          width="24"
+          height="24"
+          stroke-width="2"
+        >
+          <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
+          <path d="M21 21l-6 -6"></path>
+        </svg>
+        <input
+          name="search"
+          id="search-input"
+          placeholder="Buscar..."
+          autocomplete="off"
+        />
+      </div>
+      <ul id="search-results" class="search-results hidden"></ul>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <button id="shopping-cart">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        width="24"
+        height="24"
+        stroke-width="2"
+      >
+        <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
+        <path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
+        <path d="M17 17h-11v-14h-2"></path>
+        <path d="M6 5l14 1l-1 7h-13"></path>
+      </svg>
+    </button>
+
+    <button id="user">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        width="24"
+        height="24"
+        stroke-width="2"
+      >
+        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path>
+        <path d="M12 10m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path>
+        <path d="M6.168 18.849a4 4 0 0 1 3.832 -2.849h4a4 4 0 0 1 3.834 2.855"
+        ></path>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<div class="menu-container" id="menu">
+  <nav class="menu">
+    <h4>Nuestras categorías:</h4>
+    {
+      mainCategories?.map((category) => {
+        const subCategories = categories?.filter(
+          (subcategory) => subcategory.parent_id === category.category_id
+        );
+
+        return (
+          <ul>
+            <li class="menu-item">
+              <button class="btn-submenu">{category.name}</button>
+              <ul class="submenu">
+                {subCategories?.map((subcategory) => (
+                  <li class="submenu-item">
+                    <a href={`/category/${subcategory.name}`}>{subcategory.name}</a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          </ul>
+        );
+      })
+    }
+  </nav>
+</div>
+
+<style>
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--main-accent);
+    height: 10vh;
+    padding: 0 2rem;
+  }
+
+  header button {
+    width: 3rem;
+    height: 3rem;
+    border: none;
+    cursor: pointer;
+    background-color: inherit;
+    color: #fff;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  header img {
+    width: 160px;
+    height: 90px;
+    transform: rotate(15deg);
+    cursor: pointer;
+  }
+
+  header input {
+    border: none;
+    outline: none;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    font-size: 1.1rem;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header-center {
+      width: 60%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+  }
+
+  .header-right {
+    width: 6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .hc-input {
+    width: 100%;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    background-color: #fff;
+    padding: 0 10px;
+    gap: 8px;
+    box-shadow: 0 0 3px rgba(0,0,0,0.1);
+  }
+
+  .hc-input input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    background: transparent;
+  }
+
+  .hc-input:focus-within {
+    outline: 2px solid var(--main-accent);
+  }
+
+  /* Estilos para los resultados de búsqueda */
+  .hc-input-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 700px; 
+    border-radius: 4px;
+  }
+
+  .search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #ccc;
+    list-style: none;
+    margin: 0;
+    padding: 0.5rem 0;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .search-results li {
+    padding: 0.5rem 1rem;
+  }
+
+  .search-results li:hover {
+    background-color: #f0f0f0;
+  }
+
+  .search-results.hidden {
+    display: none;
+  }
+  /*menu*/
+
+  .menu-container {
+    display: none;
+    position: absolute;
+    z-index: 100;
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    transition: display 0.5s ease-in-out;
+  }
+
+  .menu {
+    background-color: var(--second-color);
+    width: 20%;
+    height: 90vh;
+    padding-right: 1rem;
+    overflow-y: auto;
+  }
+
+  .menu ul {
+    list-style: none;
+    padding-left: 1rem;
+  }
+
+  .menu-iteml {
+    margin: 0.5rem 0;
+  }
+
+  .submenu li {
+    margin: 1rem 0;
+  }
+
+  .menu h4 {
+    margin: 1rem;
+    font-size: 1.2rem;
+    color: var(--main-accent);
+  }
+
+  .btn-submenu {
+    font-size: 1rem;
+    color: var(--main-accent);
+    font-weight: bold;
+    height: 2.5rem;
+    width: 100%;
+    border: none;
+    text-align: left;
+    background-color: inherit;
+    border-radius: 10px;
+    padding: 0 1rem;
+  }
+
+  .btn-submenu:hover {
+    background-color: var(--main-accent);
+    color: #fff;
+  }
+
+  .submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-in-out;
+    border-left: 2px solid var(--main-accent);
+  }
+
+  .menu-item.open .submenu {
+    max-height: 500px;
+  }
+
+  .menu-item.open .btn-submenu {
+    background-color: var(--main-accent);
+    color: #fff;
+  }
+
+  .submenu-item a {
+    color: black;
+    text-decoration: none;
+  }
+
+  .submenu-item a:hover{
+    color:var(--main-accent)
+  }
+
+  .menu.active {
+    animation: slideIn 0.5s forwards;
+  }
+
+  .menu.closing {
+    animation: slideOut 0.5s forwards;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  @keyframes slideOut {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+</style>
+
+<!-- scripts -->
+<script src="/js/header.js" defer></script>
+
+<script type="module">
+  const input = document.getElementById("search-input");
+  const results = document.getElementById("search-results");
+
+  let timeout;
+
+  input.addEventListener("input", () => {
+    clearTimeout(timeout);
+    const query = input.value.trim();
+
+    if (query === "") {
+      results.innerHTML = "";
+      results.classList.add("hidden");
+      return;
+    }
+
+    timeout = setTimeout(async () => {
+      const res = await fetch(`/api/search/search?q=${encodeURIComponent(query)}`);
+      const items = await res.json();
+
+      if (items.length === 0) {
+        results.innerHTML = "<li>No se encontraron resultados</li>";
+      } else {
+        results.innerHTML = items
+          .map(item => `<li><a href="/product/${item.name}">${item.name}</a></li>`)
+          .join("");
+      }
+
+      results.classList.remove("hidden");
+    }, 300);
+  });
+
+  // Oculta los resultados si el usuario hace clic fuera
+  document.addEventListener("click", (e) => {
+    if (!input.contains(e.target) && !results.contains(e.target)) {
+      results.classList.add("hidden");
+    }
+  });
+</script>
+

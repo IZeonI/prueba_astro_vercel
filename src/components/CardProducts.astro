@@ -1,0 +1,76 @@
+---
+
+const { product} = Astro.props;
+---
+
+<div class="products">
+  <img src={product.image_url} alt={product.name} />
+  <div class="products-info">
+    <h4>{product.name}</h4>
+    <h4 class="price">${product.price}</h4>
+  </div>
+  <div class="btn-products">
+    <a href={`/product/${product.name}`} class="btn-view">Ver más</a>
+  </div>
+</div>
+
+<style>
+  .products {
+    position: relative;
+    background-color: var(--second-color);
+    width: 12rem;
+    height: 21rem;
+    box-shadow: rgba(0, 0, 0, 0.22) 0px 10px 10px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    border-radius: 10px;
+    padding-bottom:0.5rem;
+  }
+
+  .products img {
+    width: 100%;
+    height: 50%;
+    object-fit: contain;
+  }
+
+  .products-info {
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: left;
+    gap: 0.5rem;
+  }
+
+  .price {
+    color: var(--main-accent);
+  }
+  .btn-products {
+    position: absolute;
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    height: 20%;
+    bottom: 0.5rem;
+  }
+
+  .btn-products a{
+    font-size:0.8rem;
+    text-decoration: none;
+    width: 90%;
+    height: 90%;
+    border-radius: 10px;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    padding: 0.5rem;
+    background-color: var(--main-accent);
+    color:white;
+  }
+
+</style>

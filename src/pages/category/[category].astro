@@ -1,0 +1,63 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import CardProducts from "../../components/CardProducts.astro";
+import { supabase } from "../../lib/supabaseClient";
+
+const { category } = Astro.params;
+
+// Buscar la categoría en base al parámetro de la URL
+const { data: categoryData, error: errorCategory } = await supabase
+  .from('categories')
+  .select('*')
+  .eq('name', category)
+  .single(); // <-- importante: esperamos solo una categoría
+
+if (!categoryData) {
+  throw new Error("Categoría no encontrada");
+}
+
+// Buscar productos de esa categoría
+const { data: products, error: errorProducts } = await supabase
+  .from("products")
+  .select("*")
+  .eq('category_id', categoryData.category_id); // <-- usamos el ID real
+---
+
+<Layout>
+  <section class="main-container">
+    <h1>{categoryData.name}</h1>
+    <div class="container">
+      <!-- <div class="filter-container">
+        <h3>Filtrar</h3>
+      </div> -->
+      <div class="grid-container">
+        {products?.map((p) => <CardProducts product={p} />)}
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .main-container {
+    margin: 2rem auto;
+    width: 95%;
+  }
+
+  .container {
+    display: flex;
+    width: 100%;
+  }
+
+  /* .filter-container{
+    width: 20%;
+    border: 0.5px solid rgba(0,0,0,0.5);
+  } */
+
+  .grid-container {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    padding: 1rem;
+    gap: 1rem;
+  }
+</style>

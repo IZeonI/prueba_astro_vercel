@@ -1,0 +1,121 @@
+---
+import CardProducts from "../../components/CardProducts.astro";
+import Carousel from "../../components/Carousel.astro";
+import Layout from "../../layouts/Layout.astro";
+
+import { supabase } from "../../lib/supabaseClient";
+
+const { product } = Astro.params;
+
+const { data: productData, error: errorProductData} = await supabase
+  .from("products")
+  .select("*")
+  .eq('name', product)
+  .single();
+
+if (errorProductData || !productData) {
+  throw new Error("Producto no encontrado");
+}
+
+const { data: randomsP, error: errorProducts } = await supabase.rpc(
+  "get_random_products",
+  { limit_count: 12 }
+);
+---
+
+<Layout>
+  <div class="view-container">
+    <img src={productData.image_url} alt="product" />
+    <div class="info-product">
+      <h1 class="font-bold text-xl">{productData.name}</h1>
+      <p class="description">{productData.description}</p>
+      <p class="price">$ {productData.price}</p>
+      <p class="stock">Stock: {productData.stock}</p>
+      <form action="../api/cart/addCart" method="post" class="buttons-layout">
+        <div class="select-quantity">
+          <input class="bg-white p-4 h-12 rounded-sm focus:outline-2 focus:outline-(--main-accent)" type="number" min="1" max={productData.stock} value="1" name="quantity" />
+        </div>
+        <input type="hidden" name="product_id" value={productData.product_id} />
+        <button>Add cart</button>
+      </form>
+    </div>
+  </div>
+
+  <Carousel title="Tambien te puede interesar">
+    {randomsP?.map((p) => <CardProducts product={p} />)}
+  </Carousel>
+</Layout>
+
+<style>
+  .view-container {
+    margin: 2rem auto;
+    background-color: var(--second-color);
+    height: 25rem;
+    width: 95%;
+    border-radius: 10px;
+    display: flex;
+    gap: 5rem;
+    padding: 2rem;
+  }
+
+  .view-container img {
+    height: 100%;
+    width: 50%;
+    object-fit: contain;
+  }
+
+  .info-product {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 50%;
+  }
+
+  .description {
+    font-size: 1.2rem;
+  }
+
+  .price {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--main-accent);
+  }
+
+  .stock {
+    margin-top: 5rem;
+  }
+
+  .buttons-layout button {
+    width: 70%;
+    height: 3rem;
+    background-color: var(--main-accent);
+    border: none;
+    color: white;
+    border-radius: 10px;
+  }
+
+  .buttons-layout {
+    width: 100%;
+    display: flex;
+    gap: 1rem;
+  }
+
+  .select-quantity {
+    display: flex;
+  }
+
+  .select-quantity button {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .select-quantity span {
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 10px;
+  }
+</style>

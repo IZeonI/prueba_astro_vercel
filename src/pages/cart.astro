@@ -1,0 +1,86 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { supabase } from "../lib/supabaseClient";
+import CartProducts from "../components/CartProducts.astro";
+import Carousel from "../components/Carousel.astro";
+import CardProducts from "../components/CardProducts.astro";
+
+const accessToken = Astro.cookies.get("sb-access-token");
+const refreshToken = Astro.cookies.get("sb-refresh-token");
+
+if (!accessToken || !refreshToken) {
+  return Astro.redirect("/signin");
+}
+
+let session;
+try {
+  session = await supabase.auth.setSession({
+    refresh_token: refreshToken.value,
+    access_token: accessToken.value,
+  });
+  if (session.error) {
+    Astro.cookies.delete("sb-access-token", {
+      path: "/",
+    });
+    Astro.cookies.delete("sb-refresh-token", {
+      path: "/",
+    });
+    return Astro.redirect("/signin");
+  }
+} catch (error) {
+  Astro.cookies.delete("sb-access-token", {
+    path: "/",
+  });
+  Astro.cookies.delete("sb-refresh-token", {
+    path: "/",
+  });
+  return Astro.redirect("/signin");
+}
+
+const { data: cart, error } = await supabase
+  .from("cart")
+  .select("*")
+  .eq("user_id", session.data.user?.id);
+
+if (error) {
+  console.error("Error al obtener el carrito: ", error);
+}
+
+const {data: products, error: errorProducts} = await supabase
+  .from("products")
+  .select("*");
+
+const subtotal = cart?.reduce((acc, item) => {
+  const product = products?.find(p => p.product_id === item.product_id);
+  return acc + (item.quantity * product?.price || 0);
+}, 0);
+---
+
+<Layout >
+  <h1 class="text-4xl font-bold m-5">Carrito</h1>
+  <section class="w-15/16 mx-auto flex justify-between">
+
+    <div class="w-5/8 h-auto grid grid-cols-1 rounded-lg bg-(--second-color)" id="cart-container">
+      { cart?.map ((item) => ( 
+      <CartProducts product_id={item.product_id} quantity={item.quantity} cart_id={item.id} />
+      ))}
+    </div >
+
+    <div class="w-5/16 max-h-35 bg-(--second-color) p-4 rounded-lg">
+      <h4 class="font-bold text-lg">Resumen de compra</h4>
+      <p class="text-base">Subtotal: ${subtotal}</p>
+      <p class="text-base">Envío: $50</p>
+      <p class="text-base">Total: ${subtotal + 50}</p>
+  </div>
+
+  </section>
+
+  <Carousel title="Te puede interesar">
+    { products?.map( product => (
+      <CardProducts 
+       product = { product }
+      />
+    ))}
+  </Carousel>
+</Layout>
+

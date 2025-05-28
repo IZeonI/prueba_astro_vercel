@@ -1,0 +1,27 @@
+---
+import {supabase } from "../lib/supabaseClient";
+const {product_id, quantity, cart_id} = Astro.props;
+
+
+const {data: product, error} = await supabase
+  .from("products")
+  .select("*")
+  .eq("product_id", product_id)
+  .single();
+
+if (error) {
+  console.error("Error al obtener el producto: ", error);
+}
+---
+
+<section class="w-full h-auto flex items-center justify-between bg-(--second-color) p-4 rounded-lg ">
+  <img class="w-25 h-25 object-contain" src={product.image_url} alt={product.name}>
+  <h4>{product.name} </h4>
+  <p>Cantidad: {quantity}</p>
+  <p>${product.price}</p>
+  <form action="/api/cart/removeCart" method="post">
+    <input type="hidden", name="cart_id", value={cart_id}) >
+    <button class="bg-(--main-accent) text-white p-2 rounded-sm">Eliminar</button>
+  </form>
+    
+</section>

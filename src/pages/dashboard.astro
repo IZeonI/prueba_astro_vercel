@@ -1,0 +1,73 @@
+---
+import UploadImage from "../components/UploadImage";
+import Layout from "../layouts/Layout.astro";
+import { supabase } from "../lib/supabaseClient";
+
+const accessToken = Astro.cookies.get("sb-access-token");
+const refreshToken = Astro.cookies.get("sb-refresh-token");
+
+if (!accessToken || !refreshToken) {
+  return Astro.redirect("/signin");
+}
+
+let session;
+try {
+  session = await supabase.auth.setSession({
+    refresh_token: refreshToken.value,
+    access_token: accessToken.value,
+  });
+  if (session.error) {
+    Astro.cookies.delete("sb-access-token", {
+      path: "/",
+    });
+    Astro.cookies.delete("sb-refresh-token", {
+      path: "/",
+    });
+    return Astro.redirect("/signin");
+  }
+} catch (error) {
+  Astro.cookies.delete("sb-access-token", {
+    path: "/",
+  });
+  Astro.cookies.delete("sb-refresh-token", {
+    path: "/",
+  });
+  return Astro.redirect("/signin");
+}
+
+const { data: user, error } = await supabase
+  .from("user_information")
+  .select("*")
+  .eq("user_id", session.data.user?.id)
+  .single();
+
+if (error) {
+  console.log("Error al obtener usuario: ", error);
+}
+---
+
+<Layout>
+  <section class="w-7/8 h-100 bg-(--second-color) mx-auto mt-4 rounded-2xl p-4 relative">
+    <h1 class="font-bold text-2xl">Perfil</h1>
+    <div class="w-full  h-full flex gap-4">
+      <UploadImage user={user} />
+
+      <form class="w-1/2 flex flex-col gap-4 relative" method="post" action="/api/user/add">
+        <h1 class="font-bold text-2xl">Bienvenido {user.nickname}</h1>
+        <h2 class="font-bold text-lg">Información de la cuenta:</h2>
+        <div class="flex gap-4">
+          <input class="bg-white rounded-sm h-10 p-4 w-1/2 outline-0 focus:outline-2 focus:outline-(--main-accent)" type="text" name="name" placeholder="Nombre" value={user.name}/>
+          <input class="bg-white rounded-sm h-10 p-4 w-1/2 outline-0 focus:outline-2 focus:outline-(--main-accent)" type="text" name="last-name" placeholder="Apellidos" value={user.last_name}/>
+        </div>
+        <input class="bg-white rounded-sm h-10 w-full p-4 outline-0 focus:outline-2 focus:outline-(--main-accent)" type="text" name="address" placeholder="Dirección" value={user.address} />
+        <div class="absolute bottom-10 right-0 flex gap-4">
+          <button class="bg-(--main-accent) rounded-sm text-white p-2">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+
+    <form action="/api/auth/signout" class="absolute bottom-6 right-45">
+      <button class="bg-(--main-accent) rounded-sm text-white p-2">Cerrar Sesión</button>
+    </form>
+  </section>
+</Layout>
